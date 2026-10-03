@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    container_name: gwcet_web
+    command: daphne -b 0.0.0.0 -p 8000 gwcet.asgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=gwcet.settings

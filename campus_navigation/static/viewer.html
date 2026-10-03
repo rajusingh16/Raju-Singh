@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Campus Navigation - Static Room Viewer</title>
+    <style>
+        :root {
+            --bg: #071a24;
+            --panel: #0d2934;
+            --accent: #55e2bd;
+            --coral: #ff6b6b;
+            --text: #ecf6f7;
+            --muted: #8aa3aa;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--panel);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        header h1 { font-size: 18px; color: var(--accent); }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        input, select, button {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        button { cursor: pointer; background: var(--accent); color: #071a24; font-weight: 600; border: 0; }
+        button:hover { opacity: 0.9; }
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, #123440, #071a24 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .room-rect {
+            stroke: #56716c;
+            stroke-width: 0.5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .room-rect:hover, .room-rect.selected {
+            stroke: var(--coral);
+            stroke-width: 1.2;
+            filter: brightness(1.15);
+        }
+        .room-text {
+            fill: #163632;
+            font-size: 2px;
+            font-weight: 700;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        .sidebar {
+            width: 320px;
+            background: var(--panel);
+            border-left: 1px solid rgba(255,255,255,0.1);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+        .details-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .details-card h3 { color: var(--accent); margin-bottom: 6px; font-size: 15px; }
+        .details-card p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            background: rgba(85,226,189,0.15);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GWCET Static Room Layout Viewer</h1>
+        <div class="controls">
+            <input type="text" id="api-url" value="/api/bootstrap/" style="width: 220px;" placeholder="API Endpoint">
+            <button id="load-btn">Load Rooms</button>
+            <input type="text" id="search-input" placeholder="Search rooms...">
+        </div>
+    </header>
+    <div class="main-container">
+        <div class="canvas-area">
+            <svg id="viewport" viewBox="-70 -60 140 130">
+                <rect x="-68" y="-58" width="136" height="126" rx="2" fill="#cfddd5" stroke="#9cb5ab" stroke-width="0.3"/>
+                <g id="rooms-group"></g>
+            </svg>
+        </div>
+        <aside class="sidebar">
+            <h2>Room Layout Details</h2>
+            <div id="room-details" class="details-card">
+                <p>Select any room on the floorplan to inspect its layout JSON bounding box.</p>
+            </div>
+            <h3>Room Inventory (<span id="room-count">0</span>)</h3>
+            <div id="room-list"></div>
+        </aside>
+    </div>
+
+    <script>
+        const roomTypeColors = {
+            CLASSROOM: '#b9d9d6',
+            LABORATORY: '#a7c8e8',
+            ADMINISTRATION: '#e4c48e',
+            SERVICE_COUNTER: '#e4c48e',
+            LIBRARY: '#c9b3df',
+            STAFF_ROOM: '#d3b19a',
+            WASHROOM: '#a9d6ea',
+            STAIRCASE: '#c2c9c8',
+            ENTRANCE: '#a6d7bd',
+            OTHER: '#b9d89f'
+        };
+
+        let roomsData = [];
+
+        async function fetchRooms() {
+            const url = document.getElementById('api-url').value;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                roomsData = data.rooms || data.results || data;
+                renderFloorplan(roomsData);
+                renderRoomList(roomsData);
+            } catch (err) {
+                console.warn("Direct API fetch failed, retrying relative:", err);
+            }
+        }
+
+        function renderFloorplan(rooms) {
+            const container = document.getElementById('rooms-group');
+            container.innerHTML = '';
+            const svgNS = "http://www.w3.org/2000/svg";
+
+            rooms.forEach(room => {
+                const layout = room.layout || { x: room.x, y: room.y, width: room.width, height: room.length };
+                const x = (layout.x || 0) - (layout.width || 5) / 2;
+                const y = -(layout.y || 0) - (layout.height || 8.5) / 2;
+                const width = layout.width || 5;
+                const height = layout.height || 8.5;
+                const fill = roomTypeColors[room.room_type] || '#b9d89f';
+
+                const g = document.createElementNS(svgNS, 'g');
+                
+                const rect = document.createElementNS(svgNS, 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', width);
+                rect.setAttribute('height', height);
+                rect.setAttribute('fill', fill);
+                rect.setAttribute('class', 'room-rect');
+                rect.setAttribute('data-code', room.room_code);
+                rect.addEventListener('click', () => selectRoom(room));
+
+                const text = document.createElementNS(svgNS, 'text');
+                text.setAttribute('x', layout.x || 0);
+                text.setAttribute('y', -(layout.y || 0) + 0.8);
+                text.setAttribute('class', 'room-text');
+                text.textContent = (room.name || room.room_code).replace('Laboratory', 'Lab').replace('Classroom', 'Class');
+
+                g.appendChild(rect);
+                g.appendChild(text);
+                container.appendChild(g);
+            });
+
+            document.getElementById('room-count').textContent = rooms.length;
+        }
+
+        function selectRoom(room) {
+            const layout = room.layout || { x: room.x, y: room.y, width: room.width, height: room.length };
+            document.querySelectorAll('.room-rect').forEach(r => r.classList.remove('selected'));
+            const rect = document.querySelector(`.room-rect[data-code="${room.room_code}"]`);
+            if (rect) rect.classList.add('selected');
+
+            document.getElementById('room-details').innerHTML = `
+                <h3>${room.name}</h3>
+                <span class="badge">${room.room_type || 'ROOM'}</span>
+                <p><strong>Code:</strong> ${room.room_code}</p>
+                <p><strong>Floor:</strong> ${room.floor_name || room.floor_level || '0'}</p>
+                <p><strong>Wing:</strong> ${room.wing || 'N/A'}</p>
+                <p style="margin-top:8px;"><strong>Layout JSON:</strong></p>
+                <pre style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; font-size:11px; margin-top:4px; color:#55e2bd;">${JSON.stringify(layout, null, 2)}</pre>
+            `;
+        }
+
+        function renderRoomList(rooms) {
+            const list = document.getElementById('room-list');
+            list.innerHTML = '';
+            rooms.forEach(room => {
+                const item = document.createElement('div');
+                item.className = 'details-card';
+                item.style.cursor = 'pointer';
+                item.style.marginBottom = '6px';
+                item.innerHTML = `<strong>${room.name}</strong> <small style="color:var(--muted)">(${room.room_code})</small>`;
+                item.addEventListener('click', () => selectRoom(room));
+                list.appendChild(item);
+            });
+        }
+
+        document.getElementById('load-btn').addEventListener('click', fetchRooms);
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = roomsData.filter(r => 
+                (r.name && r.name.toLowerCase().includes(query)) || 
+                (r.room_code && r.room_code.toLowerCase().includes(query))
+            );
+            renderFloorplan(filtered);
+            renderRoomList(filtered);
+        });
+
+        // Auto fetch on load
+        fetchRooms();
+    </script>
+</body>
+</html>

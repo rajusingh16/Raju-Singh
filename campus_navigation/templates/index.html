@@ -1,0 +1,213 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#071a24">
+    <title>GWCET Smart Campus Navigator</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=3">
+</head>
+<body data-initial-view="{{ initial_view|default:'3d' }}">
+    <div id="loading-screen" class="loading-screen" aria-live="polite">
+        <div class="loader-mark"><span></span><span></span><span></span></div>
+        <strong>Building your campus view</strong>
+        <small>Loading rooms, routes and 3D geometry…</small>
+    </div>
+
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">G</div>
+                <div>
+                    <span>GWCET</span>
+                    <strong>Smart Campus Navigator</strong>
+                </div>
+            </div>
+            <div class="campus-context">
+                <span class="eyebrow">YOU ARE VIEWING</span>
+                <strong id="floor-context">Ground Floor · Main Building</strong>
+            </div>
+            <div class="top-actions">
+                <span id="socket-status" class="live-pill offline"><i></i> Connecting</span>
+                <button id="open-share-btn" class="icon-button text-button" type="button" aria-label="Open location sharing">
+                    <span aria-hidden="true">⌁</span> Share location
+                </button>
+                <button class="avatar-button" type="button" aria-label="Guest profile">GV</button>
+            </div>
+        </header>
+
+        <aside class="side-panel" aria-label="Navigation controls">
+            <section class="search-section">
+                <label class="eyebrow" for="room-search">FIND A PLACE</label>
+                <div class="search-box">
+                    <span aria-hidden="true">⌕</span>
+                    <input id="room-search" type="search" autocomplete="off" placeholder="Where do you want to go?">
+                    <kbd>⌘ K</kbd>
+                </div>
+                <div id="search-results" class="search-results" hidden></div>
+                <div class="quick-filters" aria-label="Quick filters">
+                    <button data-category="CLASSROOM" type="button"><span>▦</span> Classes</button>
+                    <button data-category="LABORATORY" type="button"><span>⌬</span> Labs</button>
+                    <button data-category="LIBRARY" type="button"><span>▤</span> Library</button>
+                    <button data-category="ADMINISTRATION" type="button"><span>◇</span> Offices</button>
+                    <button data-category="WASHROOM" type="button"><span>◒</span> Washrooms</button>
+                    <button data-category="STAIRCASE" type="button"><span>⌁</span> Stairs</button>
+                </div>
+            </section>
+
+            <section class="navigation-card">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">INDOOR ROUTE</span>
+                        <h2>Plan your walk</h2>
+                    </div>
+                    <button id="swap-route" class="small-icon" type="button" title="Swap locations">⇅</button>
+                </div>
+                <label class="route-field">
+                    <span class="route-dot current"></span>
+                    <span class="field-copy"><small>CURRENT LOCATION</small><select id="start-location"></select></span>
+                    <button id="scan-qr-btn" class="field-action" type="button" title="Scan a location QR code">⌗</button>
+                </label>
+                <div class="route-connector"></div>
+                <label class="route-field">
+                    <span class="route-dot destination"></span>
+                    <span class="field-copy"><small>DESTINATION</small><select id="destination"></select></span>
+                    <button id="clear-destination" class="field-action" type="button" title="Clear destination">×</button>
+                </label>
+                <div class="route-options">
+                    <label><input id="accessible-route" type="checkbox"> <span>Step-free route</span></label>
+                    <span id="route-estimate">Ready</span>
+                </div>
+                <button id="navigate-btn" class="primary-button" type="button">
+                    <span>Start navigation</span><b aria-hidden="true">→</b>
+                </button>
+            </section>
+
+            <section class="campus-summary">
+                <div><strong id="room-count">—</strong><span>Mapped places</span></div>
+                <div><strong id="qr-count">—</strong><span>QR anchors</span></div>
+                <div><strong>3</strong><span>Floor-ready</span></div>
+            </section>
+
+            <div class="privacy-note">
+                <span aria-hidden="true">⊙</span>
+                <p><strong>Privacy by design</strong>Live position sharing is optional, private-code protected, and automatically expires.</p>
+            </div>
+        </aside>
+
+        <main class="map-stage">
+            <div class="stage-gradient"></div>
+            <div id="three-view" class="map-view active" aria-label="Interactive 3D campus map"></div>
+            <div id="two-view" class="map-view" aria-label="Interactive 2D campus map">
+                <svg id="floorplan-svg" viewBox="-72 -70 144 150" role="img" aria-label="GWCET ground floor plan"></svg>
+            </div>
+
+            <div class="floor-switcher" aria-label="Floor selection">
+                <span class="eyebrow">FLOORS</span>
+                <button class="active" data-floor="0" type="button"><b>G</b><span>Ground</span></button>
+                <button data-floor="1" type="button"><b>1</b><span>First</span><i>Shell</i></button>
+                <button data-floor="2" type="button"><b>2</b><span>Second</span><i>Shell</i></button>
+                <button data-floor="all" type="button"><b>≡</b><span>All</span></button>
+            </div>
+
+            <div class="view-toolbar">
+                <div class="segmented-control">
+                    <button data-view="2d" type="button">2D</button>
+                    <button data-view="3d" class="active" type="button">3D</button>
+                </div>
+                <button id="reset-camera" class="tool-button" type="button" title="Reset map view">↺</button>
+                <button id="toggle-labels" class="tool-button active" type="button" title="Toggle labels">Aa</button>
+            </div>
+
+            <div class="map-legend">
+                <span><i class="legend-current"></i>You</span>
+                <span><i class="legend-route"></i>Route</span>
+                <span><i class="legend-destination"></i>Destination</span>
+            </div>
+
+            <div class="compass" aria-label="Map north indicator"><b>N</b><span>↑</span></div>
+
+            <section id="room-sheet" class="room-sheet" hidden>
+                <button id="close-room-sheet" class="sheet-close" type="button" aria-label="Close place details">×</button>
+                <div id="room-category-icon" class="room-category-icon">⌂</div>
+                <div class="room-copy">
+                    <span id="room-meta" class="eyebrow"></span>
+                    <h2 id="room-title"></h2>
+                    <p id="room-description"></p>
+                </div>
+                <div class="room-actions">
+                    <button id="room-view-button" class="secondary-button" type="button">Focus</button>
+                    <button id="room-navigate-button" class="primary-button compact" type="button">Navigate here →</button>
+                </div>
+            </section>
+
+            <section id="route-panel" class="route-panel" hidden>
+                <div class="route-panel-head">
+                    <div><span class="eyebrow">ACTIVE ROUTE</span><h2 id="route-title">Your route</h2></div>
+                    <button id="close-route" class="sheet-close" type="button">×</button>
+                </div>
+                <div class="route-metrics">
+                    <div><strong id="route-distance">0 m</strong><span>Distance</span></div>
+                    <div><strong id="route-time">0 min</strong><span>Walking</span></div>
+                    <div><strong id="route-floor">G</strong><span>Floor</span></div>
+                </div>
+                <ol id="route-steps" class="route-steps"></ol>
+                <button id="simulate-route" class="secondary-button wide" type="button">▶ Simulate walk</button>
+            </section>
+        </main>
+    </div>
+
+    <dialog id="qr-dialog" class="modal">
+        <form method="dialog" class="modal-card">
+            <button class="modal-close" value="cancel" aria-label="Close">×</button>
+            <span class="modal-icon">⌗</span>
+            <span class="eyebrow">QR POSITIONING</span>
+            <h2>Set your indoor location</h2>
+            <p>Scan a campus QR marker, or choose a demo anchor below.</p>
+            <video id="qr-video" playsinline muted hidden></video>
+            <button id="start-camera" class="secondary-button wide" type="button">Open camera scanner</button>
+            <label class="modal-field">Campus anchor<select id="qr-location-select"></select></label>
+            <button id="apply-qr" class="primary-button wide" value="cancel" type="button">Use this location</button>
+            <small>Camera access is used only while this dialog is open.</small>
+        </form>
+    </dialog>
+
+    <dialog id="share-dialog" class="modal">
+        <form method="dialog" class="modal-card share-card">
+            <button class="modal-close" value="cancel" aria-label="Close">×</button>
+            <span class="modal-icon">⌁</span>
+            <span class="eyebrow">CONSENT-BASED LIVE LOCATION</span>
+            <h2>Share or follow a location</h2>
+            <div class="share-tabs">
+                <button class="active" data-share-tab="share" type="button">Share mine</button>
+                <button data-share-tab="join" type="button">Enter a code</button>
+            </div>
+            <div id="share-tab" class="share-pane">
+                <label class="modal-field">Display name<input id="share-name" value="Campus visitor" maxlength="60"></label>
+                <label class="modal-field">Automatically stop after<select id="share-duration"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label>
+                <label class="consent-check"><input id="share-consent" type="checkbox"><span>I choose to share my current indoor position with anyone who has the private code.</span></label>
+                <button id="start-sharing" class="primary-button wide" type="button">Create private share code</button>
+                <div id="share-active" class="share-active" hidden>
+                    <small>PRIVATE CODE</small><strong id="share-code">——</strong>
+                    <span id="share-expiry"></span>
+                    <button id="stop-sharing" class="danger-button" type="button">Stop sharing now</button>
+                </div>
+            </div>
+            <div id="join-tab" class="share-pane" hidden>
+                <label class="modal-field">Private share code<input id="join-code" maxlength="6" placeholder="A1B2C3"></label>
+                <button id="join-sharing" class="primary-button wide" type="button">Follow approved user</button>
+                <p id="follow-status" class="follow-status">A shared user will appear as a violet marker on the map.</p>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    {{ initial_view|default:'3d'|json_script:"initial-view" }}
+    <script src="{% static 'js/vendor/three.min.js' %}"></script>
+    <script src="{% static 'js/vendor/OrbitControls.js' %}"></script>
+    <script src="{% static 'js/navigation.js' %}?v=3"></script>
+    <script src="{% static 'js/webgl_viewer.js' %}?v=4"></script>
+    <script src="{% static 'js/app.js' %}?v=4"></script>
+</body>
+</html>

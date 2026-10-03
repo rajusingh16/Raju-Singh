@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.sqlite3.backup
+*.backup
+db.sqlite3
+venv/
+.env
+.git
+.gitignore
+.vscode
+.idea
+*.log
+scratch/

@@ -1,0 +1,71 @@
+{
+  "nodes": {
+    "entrance_porch": { "id": "entrance_porch", "x": 0, "y": 0, "z": 10, "type": "corridor", "label": "Entrance Porch" },
+    "reception": { "id": "reception", "x": -5, "y": 0, "z": 5, "type": "room", "label": "Reception" },
+    "principal_cabin": { "id": "principal_cabin", "x": 5, "y": 0, "z": 5, "type": "room", "label": "Principal Cabin" },
+    "admission_counters": { "id": "admission_counters", "x": -10, "y": 0, "z": 0, "type": "room", "label": "Admission Counters" },
+    "staff_room": { "id": "staff_room", "x": 10, "y": 0, "z": 0, "type": "room", "label": "Staff Room" },
+    "corridor_main": { "id": "corridor_main", "x": 0, "y": 0, "z": 0, "type": "corridor", "label": "Main Corridor" },
+    
+    "class_l1": { "id": "class_l1", "x": -15, "y": 0, "z": -10, "type": "room", "label": "Classroom L1" },
+    "class_l2": { "id": "class_l2", "x": -15, "y": 0, "z": -20, "type": "room", "label": "Classroom L2" },
+    "class_l3": { "id": "class_l3", "x": -15, "y": 0, "z": -30, "type": "room", "label": "Classroom L3" },
+    "class_l4": { "id": "class_l4", "x": -15, "y": 0, "z": -40, "type": "room", "label": "Classroom L4" },
+    "class_l5": { "id": "class_l5", "x": -15, "y": 0, "z": -50, "type": "room", "label": "Classroom L5" },
+    "class_l6": { "id": "class_l6", "x": -15, "y": 0, "z": -60, "type": "room", "label": "Classroom L6" },
+
+    "class_r1": { "id": "class_r1", "x": 15, "y": 0, "z": -10, "type": "room", "label": "Classroom R1" },
+    "class_r2": { "id": "class_r2", "x": 15, "y": 0, "z": -20, "type": "room", "label": "Classroom R2" },
+    "class_r3": { "id": "class_r3", "x": 15, "y": 0, "z": -30, "type": "room", "label": "Classroom R3" },
+    "class_r4": { "id": "class_r4", "x": 15, "y": 0, "z": -40, "type": "room", "label": "Classroom R4" },
+    "class_r5": { "id": "class_r5", "x": 15, "y": 0, "z": -50, "type": "room", "label": "Classroom R5" },
+
+    "physics_lab": { "id": "physics_lab", "x": -5, "y": 0, "z": -70, "type": "room", "label": "Physics Lab" },
+    "chemistry_lab": { "id": "chemistry_lab", "x": 5, "y": 0, "z": -70, "type": "room", "label": "Chemistry Lab" },
+    "computer_lab": { "id": "computer_lab", "x": 0, "y": 0, "z": -80, "type": "room", "label": "Computer Lab" },
+    "central_library": { "id": "central_library", "x": 20, "y": 0, "z": -60, "type": "room", "label": "Central Library" },
+    
+    "restroom_m": { "id": "restroom_m", "x": -25, "y": 0, "z": -35, "type": "room", "label": "Restroom (Men)" },
+    "restroom_w": { "id": "restroom_w", "x": 25, "y": 0, "z": -35, "type": "room", "label": "Restroom (Women)" },
+    
+    "stairs_1": { "id": "stairs_1", "x": -20, "y": 0, "z": 0, "type": "corridor", "label": "Stairs 1" },
+    "stairs_2": { "id": "stairs_2", "x": 20, "y": 0, "z": 0, "type": "corridor", "label": "Stairs 2" },
+    
+    "corridor_left": { "id": "corridor_left", "x": -10, "y": 0, "z": -35, "type": "corridor", "label": "Left Corridor" },
+    "corridor_right": { "id": "corridor_right", "x": 10, "y": 0, "z": -35, "type": "corridor", "label": "Right Corridor" },
+    "corridor_back": { "id": "corridor_back", "x": 0, "y": 0, "z": -70, "type": "corridor", "label": "Back Corridor" }
+  },
+  "edges": [
+    ["entrance_porch", "corridor_main"],
+    ["corridor_main", "reception"],
+    ["corridor_main", "principal_cabin"],
+    ["corridor_main", "admission_counters"],
+    ["corridor_main", "staff_room"],
+    ["corridor_main", "corridor_left"],
+    ["corridor_main", "corridor_right"],
+    
+    ["corridor_left", "class_l1"],
+    ["corridor_left", "class_l2"],
+    ["corridor_left", "class_l3"],
+    ["corridor_left", "class_l4"],
+    ["corridor_left", "class_l5"],
+    ["corridor_left", "class_l6"],
+    ["corridor_left", "restroom_m"],
+    ["corridor_left", "stairs_1"],
+    ["corridor_left", "corridor_back"],
+
+    ["corridor_right", "class_r1"],
+    ["corridor_right", "class_r2"],
+    ["corridor_right", "class_r3"],
+    ["corridor_right", "class_r4"],
+    ["corridor_right", "class_r5"],
+    ["corridor_right", "central_library"],
+    ["corridor_right", "restroom_w"],
+    ["corridor_right", "stairs_2"],
+    ["corridor_right", "corridor_back"],
+
+    ["corridor_back", "physics_lab"],
+    ["corridor_back", "chemistry_lab"],
+    ["corridor_back", "computer_lab"]
+  ]
+}

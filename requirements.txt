@@ -1,0 +1,7 @@
+django>=6.0,<7
+djangorestframework>=3.17,<4
+channels
+daphne
+django-cors-headers
+
+

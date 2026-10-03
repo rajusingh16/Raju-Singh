@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Floor Plan - GWCET</title>
+    <style>
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #f4f4f9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .header { background: #1a1a2e; color: white; width: 100%; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: absolute; top: 0; }
+        .map-container { width: 80%; max-width: 800px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: 60px; }
+        svg { width: 100%; height: auto; }
+        .room { fill: #e0e0e0; stroke: #333; stroke-width: 2; transition: 0.3s; cursor: pointer; }
+        .room:hover { fill: #a2a8d3; }
+        .corridor { fill: #f9f9f9; stroke: #ccc; stroke-width: 1; }
+        .path { stroke: #e94560; stroke-width: 4; fill: none; stroke-dasharray: 5; animation: dash 2s linear infinite; }
+        .text-label { font-size: 14px; fill: #333; font-weight: bold; pointer-events: none; }
+        
+        @keyframes dash { to { stroke-dashoffset: -20; } }
+        
+        .btn-back { position: absolute; top: 15px; left: 20px; padding: 8px 15px; background: #e94560; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="btn-back">← Back to 3D View</a>
+        <h2>GWCET Ground Floor (2D)</h2>
+    </div>
+    
+    <div class="map-container">
+        <!-- SVG Floor Plan Representation -->
+        <svg viewBox="-50 -100 100 120" xmlns="http://www.w3.org/2000/svg" id="floorplan-svg">
+            <!-- Corridors -->
+            <rect class="corridor" x="-12" y="-75" width="24" height="85" />
+            <rect class="corridor" x="-25" y="-40" width="50" height="10" />
+
+            <!-- Rooms -->
+            <rect class="room" id="svg_entrance_porch" x="-10" y="5" width="20" height="10" />
+            <text class="text-label" x="0" y="12" text-anchor="middle">Entrance</text>
+
+            <rect class="room" id="svg_reception" x="-15" y="-5" width="10" height="10" />
+            <text class="text-label" x="-10" y="2" text-anchor="middle" font-size="6">Reception</text>
+            
+            <rect class="room" id="svg_principal_cabin" x="5" y="-5" width="10" height="10" />
+            <text class="text-label" x="10" y="2" text-anchor="middle" font-size="6">Principal</text>
+
+            <!-- Labs -->
+            <rect class="room" id="svg_computer_lab" x="-10" y="-90" width="20" height="15" />
+            <text class="text-label" x="0" y="-80" text-anchor="middle" font-size="6">Comp Lab</text>
+
+            <!-- Route Path (Example) -->
+            <path class="path" id="svg-active-path" d="" />
+        </svg>
+    </div>
+
+    <script>
+        // Simple mock visualization logic
+        const mapDataUrl = "/static/data/ground_floor.json";
+        // To integrate fully, navigation.js can be imported or used here to draw paths on the SVG based on A* response.
+    </script>
+</body>
+</html>
